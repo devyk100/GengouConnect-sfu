@@ -41,17 +41,18 @@ func CreateClassHandler(writer http.ResponseWriter, request *http.Request) {
 		}
 		return
 	}
-
-	Classes[classId] = &Class{
-		Instructor:    nil,
-		Learners:      nil,
-		isLive:        true,
-		Events:        make(chan BoardEvent),
-		Chats:         make(chan Chat, 50),
-		ClassId:       classId,
-		ChatsLock:     sync.RWMutex{},
-		PreviousChats: make([]Chat, PreviousChatAmount),
-		LearnersLock:  sync.RWMutex{},
+	if Classes[classId] == nil {
+		Classes[classId] = &Class{
+			Instructor:    nil,
+			Learners:      nil,
+			isLive:        true,
+			Events:        make(chan BoardEvent),
+			Chats:         make(chan Chat, 50),
+			ClassId:       classId,
+			ChatsLock:     sync.RWMutex{},
+			PreviousChats: make([]Chat, PreviousChatAmount),
+			LearnersLock:  sync.RWMutex{},
+		}
 	}
 
 	writer.WriteHeader(http.StatusCreated)

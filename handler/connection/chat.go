@@ -61,15 +61,18 @@ func (e *Class) ChatHandler() {
 func PreviousChatHandler(w http.ResponseWriter, r *http.Request) {
 	classId := r.URL.Query().Get("classId")
 	userId := r.URL.Query().Get("userId")
-
+	w.Header().Set("Access-Control-Allow-Origin", "*") // Allow any origin domain
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 	w.Header().Set("Content-Type", "application/json")
 
-	if classId == "" || userId == "" || Classes[classId] != nil {
+	if classId == "" || userId == "" || Classes[classId] == nil {
 		w.WriteHeader(http.StatusBadRequest)
 		_, err := w.Write([]byte(`{"success":false}`))
 		if err != nil {
 			fmt.Println("Error in sending previous chats\n", err.Error())
 		}
+		return
 	}
 
 	var chats []ChatJSON
@@ -80,11 +83,11 @@ func PreviousChatHandler(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	w.WriteHeader(http.StatusOK)
 	jsonChats, err := json.Marshal(chats)
 	if err != nil {
 		fmt.Println("Error in sending previous chats\n", err.Error())
 	}
+	w.WriteHeader(http.StatusOK)
 	_, err = w.Write(jsonChats)
 	if err != nil {
 		fmt.Println("Error in sending previous chats\n", err.Error())
