@@ -7,23 +7,11 @@ package connection
 import (
 	"fmt"
 	"net/http"
+	connection_structs "sfu/handler/connection-structs"
+	webrtc_sfu "sfu/internal/webrtc-sfu"
 	"sync"
 	"time"
 )
-
-type Class struct {
-	Instructor    *InstructorClient
-	Learners      []*LearnerClient
-	isLive        bool
-	ClassId       string
-	Events        chan BoardEvent
-	Chats         chan Chat
-	LearnersLock  sync.RWMutex
-	ChatsLock     sync.RWMutex
-	PreviousChats []Chat
-}
-
-var Classes = map[string]*Class{}
 
 func CreateClassHandler(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println("CreateClassHandler Called")
@@ -32,7 +20,7 @@ func CreateClassHandler(writer http.ResponseWriter, request *http.Request) {
 	// Make a check if this was put in the Database or not by the backend
 
 	writer.Header().Set("Content-Type", "application/json")
-	if classId == "" || Classes[classId] != nil {
+	if classId == "" || connection_structs.Classes[classId] != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		_, err := writer.Write([]byte(`{"success": false }`))
 		if err != nil {
@@ -41,39 +29,47 @@ func CreateClassHandler(writer http.ResponseWriter, request *http.Request) {
 		}
 		return
 	}
-	if Classes[classId] == nil {
-		Classes[classId] = &Class{
+	if connection_structs.Classes[classId] == nil {
+		connection_structs.Classes[classId] = &connection_structs.Class{
 			Instructor:    nil,
 			Learners:      nil,
-			isLive:        true,
-			Events:        make(chan BoardEvent),
-			Chats:         make(chan Chat, 50),
+			IsLive:        true,
+			Events:        make(chan connection_structs.Event),
+			Chats:         make(chan connection_structs.Chat, 50),
 			ClassId:       classId,
 			ChatsLock:     sync.RWMutex{},
-			PreviousChats: make([]Chat, PreviousChatAmount),
+			PreviousChats: make([]connection_structs.Chat, connection_structs.PreviousChatAmount),
 			LearnersLock:  sync.RWMutex{},
 		}
-	}
 
+	}
+	if webrtc_sfu.LiveClasses[classId] == nil {
+		webrtc_sfu.LiveClasses[classId] = &webrtc_sfu.LiveClass{
+			InstructorPeerConnection: nil,
+			LearnerPeerConnections:   nil,
+			ClassId:                  classId,
+			LocalTrack:               nil,
+		}
+	}
 	writer.WriteHeader(http.StatusCreated)
 
 	go func(classId string) {
 		for {
 			select {
 			case <-time.After(time.Minute * 60):
-				if Classes[classId].Instructor == nil {
+				if connection_structs.Classes[classId].Instructor == nil {
 					fmt.Println("Delete the class room", classId)
-					close(Classes[classId].Events)
-					close(Classes[classId].Chats)
-					Classes[classId] = nil
+					close(connection_structs.Classes[classId].Events)
+					close(connection_structs.Classes[classId].Chats)
+					connection_structs.Classes[classId] = nil
 					return
 				}
 			}
 		}
 	}(classId)
 
-	go Classes[classId].BoardEventHandler()
-	go Classes[classId].ChatHandler()
+	go connection_structs.Classes[classId].BoardEventHandler()
+	go connection_structs.Classes[classId].ChatHandler()
 
 	_, err := writer.Write([]byte(`{"success": true }`))
 	if err != nil {
