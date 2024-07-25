@@ -95,7 +95,7 @@ func learnerConnectionHandler(client *connectionstructs.LearnerClient) error {
 		connectionstructs.Classes[classId].Chats <- payload
 	}
 	defer func() {
-		if peerConnection != nil {
+		if peerConnection == nil {
 			return
 		}
 		cErr := peerConnection.Close()

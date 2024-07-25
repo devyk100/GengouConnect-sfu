@@ -3,15 +3,19 @@ package webrtc_sfu
 import (
 	"fmt"
 	"github.com/gorilla/websocket"
+	"github.com/joho/godotenv"
 	pionInterceptor "github.com/pion/interceptor"
 	"github.com/pion/interceptor/pkg/intervalpli"
 	"github.com/pion/webrtc/v4"
+	"log"
+	"os"
 	connection_structs "sfu/handler/connection-structs"
 )
 
 type LiveClass struct {
 	InstructorPeerConnection *webrtc.PeerConnection
 	LocalTrack               *webrtc.TrackLocalStaticRTP
+	LocalAudioTrack          *webrtc.TrackLocalStaticRTP
 	LearnerPeerConnections   []*webrtc.PeerConnection
 	ClassId                  string
 	// Add RW mutexes here
@@ -20,10 +24,18 @@ type LiveClass struct {
 var LiveClasses map[string]*LiveClass = make(map[string]*LiveClass)
 
 func InitializeSfuConnection(event connection_structs.Event, client *websocket.Conn, userType string, classId string) *webrtc.PeerConnection {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	turnIp := os.Getenv("PUBLIC_IP")
 	peerConnectionConfig := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
-				URLs: []string{"stun:stun.l.google.com:19302"},
+				URLs:           []string{"stun:" + turnIp + ":3478", "stun:stun.l.google.com:19302", "turn:" + turnIp + ":3478"},
+				Username:       "user",
+				Credential:     "pass",
+				CredentialType: 0,
 			},
 		},
 	}
@@ -127,10 +139,15 @@ func InitializeSfuConnection(event connection_structs.Event, client *websocket.C
 			return nil
 		}
 		rtpSender, err := peerConnection.AddTrack(LiveClasses[classId].LocalTrack)
+
 		if err != nil {
 			fmt.Println(err.Error(), "In adding track")
 		}
 
+		_, err = peerConnection.AddTrack(LiveClasses[classId].LocalAudioTrack)
+		if err != nil {
+			fmt.Println(err.Error(), "In adding audio track")
+		}
 		go func() {
 			rtcpBuf := make([]byte, 1000)
 			for {
@@ -141,6 +158,7 @@ func InitializeSfuConnection(event connection_structs.Event, client *websocket.C
 				}
 				if rtcpErr != nil {
 					fmt.Println(rtcpErr.Error(), "In reading packets from the receivers")
+					return
 				}
 			}
 		}()

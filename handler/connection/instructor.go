@@ -97,7 +97,7 @@ func instructorConnectionHandler(client *connection_structs.InstructorClient) er
 		}
 	}
 	defer func() {
-		if peerConnection != nil {
+		if peerConnection == nil {
 			return
 		}
 		cErr := peerConnection.Close()

@@ -4,8 +4,11 @@ go 1.22
 
 require (
 	github.com/gorilla/websocket v1.5.3
+	github.com/joho/godotenv v1.5.1
 	github.com/pion/interceptor v0.1.29
+	github.com/pion/turn/v3 v3.0.3
 	github.com/pion/webrtc/v4 v4.0.0-beta.23
+	golang.org/x/sys v0.22.0
 )
 
 require (
@@ -24,8 +27,6 @@ require (
 	github.com/pion/stun/v2 v2.0.0 // indirect
 	github.com/pion/transport/v2 v2.2.5 // indirect
 	github.com/pion/transport/v3 v3.0.2 // indirect
-	github.com/pion/turn/v3 v3.0.3 // indirect
 	golang.org/x/crypto v0.25.0 // indirect
 	golang.org/x/net v0.27.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
 )

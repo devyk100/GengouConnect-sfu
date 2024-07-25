@@ -9,6 +9,7 @@ import (
 	"net/http"
 	connection_structs "sfu/handler/connection-structs"
 	webrtc_sfu "sfu/internal/webrtc-sfu"
+	webrtc_turn "sfu/internal/webrtc-turn"
 	"sync"
 	"time"
 )
@@ -70,6 +71,19 @@ func CreateClassHandler(writer http.ResponseWriter, request *http.Request) {
 
 	go connection_structs.Classes[classId].BoardEventHandler()
 	go connection_structs.Classes[classId].ChatHandler()
+
+	if !webrtc_turn.IsTurnStarted() {
+		turnStopChan := webrtc_turn.TurnStarter()
+		go func() {
+			for {
+				time.Sleep(time.Minute * 20)
+				if len(webrtc_sfu.LiveClasses) < 1 {
+					turnStopChan <- true
+					return
+				}
+			}
+		}()
+	}
 
 	_, err := writer.Write([]byte(`{"success": true }`))
 	if err != nil {
