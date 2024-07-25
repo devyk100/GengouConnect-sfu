@@ -2,25 +2,29 @@ package main
 
 import (
 	"fmt"
-	"github.com/gorilla/websocket"
 	"net/http"
 	"sfu/handler/connection"
 )
 
-type Client struct {
-	conn *websocket.Conn
-}
-
-type Message struct {
-	Message string `json:"message"`
-}
-
 func main() {
+	/*
+		This is the main websocket connection
+	*/
 	http.HandleFunc("/ws", connection.HandleInitConnection)
+
+	/*
+		This is the class creation
+	*/
 	http.HandleFunc("/create-class", connection.CreateClassHandler)
+
+	/*
+		This is for the recent chats of the class, an HTTP handler
+	*/
 	http.HandleFunc("/chats", connection.PreviousChatHandler)
 	fmt.Println("Listening on port 8000")
+
 	err := http.ListenAndServe(":8000", nil)
+
 	if err != nil {
 		panic(err.Error())
 		return

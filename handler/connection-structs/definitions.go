@@ -120,6 +120,7 @@ func (e *Class) ChatHandler() {
 			fmt.Println("WRITING EVENTS to STUDENTs CHAT")
 
 			// Tracking the previous chats
+			e.ChatsLock.Lock()
 			if len(e.PreviousChats) > PreviousChatAmount {
 				for len(e.PreviousChats) >= PreviousChatAmount {
 					e.PreviousChats = e.PreviousChats[1:]
@@ -127,6 +128,7 @@ func (e *Class) ChatHandler() {
 			}
 
 			e.PreviousChats = append(e.PreviousChats, event)
+			e.ChatsLock.Unlock()
 
 			if e.Instructor != nil {
 				err := e.Instructor.Conn.WriteJSON(event)
@@ -152,13 +154,13 @@ func (e *Class) ChatHandler() {
 var Classes = map[string]*Class{}
 
 func (e *Class) BoardEventHandler() {
-	defer e.LearnersLock.RUnlock()
+	defer e.LearnersLock.Unlock()
 	for event := range Classes[e.ClassId].Events {
 		if event.EventType == ChatEventType || event.EventType == PreviousChatEventType {
 			return
 		}
 		fmt.Println("WRITING EVENTS to STUDENTs")
-		e.LearnersLock.RLock()
+		e.LearnersLock.Lock()
 		for index, learner := range e.Learners {
 			fmt.Println("FOUND LEARNERS ", index, event.EventType)
 			err := learner.Conn.WriteJSON(event)

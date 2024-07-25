@@ -14,6 +14,11 @@ import (
 	"time"
 )
 
+/*
+This function is just for the purpose of creating a class in memory from a HTTP request to localhost:8000/create-class?classId=123
+SHIFT THIS TO GRPC
+*/
+
 func CreateClassHandler(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println("CreateClassHandler Called")
 	classId := request.URL.Query().Get("classId")
