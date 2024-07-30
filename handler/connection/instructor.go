@@ -108,6 +108,7 @@ func instructorConnectionHandler(client *connectionData.InstructorClient) error 
 		}
 
 		if event.EventType != connectionData.ChatEventType && event.EventType != connectionData.WebRTCEventType {
+			fmt.Println("We got a BOARD EVENT YAY!", event.BoardSvg)
 			connectionData.Classes[classId].Events <- event
 		} else if event.EventType == connectionData.WebRTCEventType {
 			peerConnection = webrtcsfu.InitializeSfuConnection(event, client.Conn, connectionData.Instructor, classId)

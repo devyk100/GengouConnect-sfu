@@ -64,6 +64,7 @@ type Event struct {
 	Image       Image       `json:"image"`
 	Chat        Chat        `json:"chat"`
 	WebrtcEvent WebrtcEvent `json:"webrtcEvent"`
+	BoardSvg    string      `json:"boardSvg"`
 }
 
 const (
@@ -154,20 +155,20 @@ func (e *Class) ChatHandler() {
 var Classes = map[string]*Class{}
 
 func (e *Class) BoardEventHandler() {
-	defer e.LearnersLock.Unlock()
 	for event := range Classes[e.ClassId].Events {
 		if event.EventType == ChatEventType || event.EventType == PreviousChatEventType {
 			return
 		}
 		fmt.Println("WRITING EVENTS to STUDENTs")
-		e.LearnersLock.Lock()
+		//e.LearnersLock.Lock()
 		for index, learner := range e.Learners {
 			fmt.Println("FOUND LEARNERS ", index, event.EventType)
 			err := learner.Conn.WriteJSON(event)
 			if err != nil {
-				fmt.Println("Error writing event")
+				fmt.Println("Error writing event", err.Error())
 				return
 			}
 		}
+		//e.LearnersLock.Unlock()
 	}
 }

@@ -32,7 +32,11 @@ func InitializeSfuConnection(event connection_structs.Event, client *websocket.C
 	peerConnectionConfig := webrtc.Configuration{
 		ICEServers: []webrtc.ICEServer{
 			{
-				URLs:           []string{"stun:" + turnIp + ":3478", "stun:stun.l.google.com:19302", "turn:" + turnIp + ":3478"},
+				URLs: []string{
+					"stun:" + turnIp + ":3478",
+					//"stun:stun.l.google.com:19302",
+					//"turn:" + turnIp + ":3478",
+				},
 				Username:       "user",
 				Credential:     "pass",
 				CredentialType: 0,
