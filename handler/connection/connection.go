@@ -45,7 +45,6 @@ func HandleInitConnection(writer http.ResponseWriter, request *http.Request) {
 		}
 
 		return
-
 	} else if request.URL.Query().Get("type") == connectionData.Learner {
 		client := &connectionData.LearnerClient{Conn: conn}
 		err := learnerConnectionHandler(client)
